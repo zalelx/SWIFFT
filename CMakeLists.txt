@@ -1,0 +1,1 @@
+add_executable(swifft test.c swifft.c swifft.h setup.c)

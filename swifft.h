@@ -3,6 +3,7 @@
 #define SWIFFT_H
 
 #include <stdint.h>
+#include <time.h>
 
 #define N 64       // Vector length. Must be a power of 2.
 #define P 257      // Modulus. Integer arithmetic is performed modulo P. 

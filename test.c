@@ -14,73 +14,82 @@ HashState state ALIGN;
 HashData data ALIGN;
 
 void initState(HashState st) {
-  for (int i=0; i<Mstate; i++)
-    for (int j=0; j<N/W; j++)
-      st[i][j]=0;
+    for (int i = 0; i < Mstate; i++)
+        for (int j = 0; j < N / W; j++)
+            st[i][j] = 0;
 }
 
-void printState(HashState st) {
-  for (int i=0; i<Mstate; i++) {
-    for (int j=0; j<N/W; j=j+2)
-      printf("%02x%02x ", st[i][j], st[i][j+1]);
-    printf("\n");
-  }
+void printState(HashState st, double time) {
+    for (int i = 0; i < Mstate; i++) {
+        for (int j = 0; j < N / W; j = j + 2)
+            printf("%02x%02x ", st[i][j], st[i][j + 1]);
+        printf("\n");
+    }
+    printf("Elapsed time: %.6f seconds", time);
 }
 
 void printKey(HashKey k) {
-  for (int i=0; i<M; i++) {
-    for (int j=0; j<N; j++)
-      printf("%3d ", k.keyval[i][j/W][j%W]);
-    printf("\n");
-  }
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++)
+            printf("%3d ", k.keyval[i][j / W][j % W]);
+        printf("\n");
+    }
 }
 
 void printData(HashData d) {
-  for (int i=0; i<Mdata; i++) {
-    for (int j=0; j<N/W; j=j+2)
-      printf("%02x%02x ", d[i][j], d[i][j+1]);
-    printf("\n");
-  }
+    for (int i = 0; i < Mdata; i++) {
+        for (int j = 0; j < N / W; j = j + 2)
+            printf("%02x%02x ", d[i][j], d[i][j + 1]);
+        printf("\n");
+    }
 }
 
 void readKey(char filename[], HashKey *key) {
-  FILE *keyfile = fopen(filename, "r");
-  for (int i=0; i<M; i++)
-    for (int j=0; j<N; j++)
-      key->keyval[i][j/W][j%W] = getc(keyfile);
-  fclose(keyfile);
-  setupKey(*key);
+    FILE *keyfile = fopen(filename, "r");
+    for (int i = 0; i < M; i++)
+        for (int j = 0; j < N; j++)
+            key->keyval[i][j / W][j % W] = getc(keyfile);
+    fclose(keyfile);
+    setupKey(*key);
 }
 
 void readInput(HashData data) {
-  for (int i=0; i<Mdata; i++) 
-    for (int j=0; j<N/W; j++) 
-      data[i][j] = getchar();
+    for (int i = 0; i < Mdata; i++)
+        for (int j = 0; j < N / W; j++)
+            data[i][j] = getchar();
 }
- 
-int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    printf("Usage: SWIFFT file [n=1] <input\n");
-    printf("\tRead key from first 1024 characters of 'file'\n");
-    printf("\tRead data from first 56 bytes of standard input\n");
-    printf("\tRun SWIFFT n times, with IV=0 and n copies of data.\n");
-    return 1;
-  }
 
-  setupTables();
-  initState(state);
-  readKey(argv[1],&key);
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: SWIFFT file [n=1] <input\n");
+        printf("\tRead key from first 1024 characters of 'file'\n");
+        printf("\tRead data from first 56 bytes of standard input\n");
+        printf("\tRun SWIFFT n times, with IV=0 and n copies of data.\n");
+        return 1;
+    }
 
-  readInput(data);
-  if (argc == 2) {
-    SwiFFT(key, state, data);
-    printState(state);
-  } else {
-    int count = atoi(argv[2]);
-    printf("Executing %d times.\n", count);
-    for (int i=0; i < count; i++) 
-      SwiFFT(key, state, data);
-    printState(state);
-  }
-  return 0;
+    setupTables();
+    initState(state);
+    readKey(argv[1], &key);
+    double time;
+    clock_t start, end;
+
+    readInput(data);
+    if (argc == 2) {
+        start = clock();
+        SwiFFT(key, state, data);
+        end = clock();
+        time = ((double) (end - start)) / CLOCKS_PER_SEC;
+        printState(state, time);
+    } else {
+        int count = atoi(argv[2]);
+        printf("Executing %d times.\n", count);
+        start = clock();
+        for (int i = 0; i < count; i++)
+            SwiFFT(key, state, data);
+        end = clock();
+        time = ((double) (end - start)) / CLOCKS_PER_SEC;
+        printState(state, time);
+    }
+    return 0;
 }
